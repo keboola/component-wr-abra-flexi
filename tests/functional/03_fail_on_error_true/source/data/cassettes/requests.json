@@ -1,0 +1,7 @@
+{
+  "_metadata": {"freeze_time": "2026-06-01T19:58:59", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-06-01T17:59:00.505116+00:00"},
+  "interactions": [
+    {"request": {"body": "{\"winstrom\": {\"adresar\": [{\"nazev\": \"VCR Test Company Alpha\", \"stat\": \"code:CZ\", \"id\": \"ext:KBC_VCR_001\"}, {\"nazev\": \"VCR Bad Record - invalid country\", \"stat\": \"code:INVALID_ZZ_9999\", \"id\": \"ext:KBC_VCR_BAD\"}]}}", "headers": {"Accept": ["*/*"], "Content-Length": ["212"], "Content-Type": ["application/json"]}, "method": "POST", "uri": "https://keboola-czech.flexibee.eu/c/keboola_czech_s_r_o__2024_02_08_0909/adresar.json"}, "response": {"body": {"string": "{\"winstrom\":{\"@version\":\"1.0\",\"success\":\"false\",\"stats\":{\"created\":\"0\",\"updated\":\"0\",\"deleted\":\"0\",\"skipped\":\"0\",\"failed\":\"2\"},\"results\":[{\"request-id\":\"ext:KBC_VCR_001\",\"errors\":[{\"message\":\"Nem\u00e1te opr\u00e1vn\u011bn\u00ed na vytvo\u0159en\u00ed z\u00e1znamu v evidenci Adres\u00e1\u0159. (Role u\u017eivatele: JENCIST) [ext:KBC_VCR_001]\",\"messageCode\":\"importXmlNeopravnenyCreate\"}]},{\"request-id\":\"ext:KBC_VCR_BAD\",\"errors\":[{\"message\":\"Nem\u00e1te opr\u00e1vn\u011bn\u00ed na vytvo\u0159en\u00ed z\u00e1znamu v evidenci Adres\u00e1\u0159. (Role u\u017eivatele: JENCIST) [ext:KBC_VCR_BAD]\",\"messageCode\":\"importXmlNeopravnenyCreate\"}]}]}}"}, "headers": {"Content-Length": ["566"], "Content-Type": ["application/json"]}, "status": {"code": 400, "message": "Bad Request"}}}
+  ],
+  "version": 1
+}

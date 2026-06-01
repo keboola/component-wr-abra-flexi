@@ -1,0 +1,24 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "write_errors.csv": {
+      "columns": [
+        "id",
+        "error",
+        "field",
+        "code"
+      ],
+      "hash": "sha256:6d5cd6c96192ec96b556fc9e089bf5708acffd2f19e83160907d83d237ed29c5",
+      "row_count": 3,
+      "size_bytes": 335
+    },
+    "write_errors.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:f922827d37b148a7d268bf63b592bee916a0ee267058b4b4a054141b9f6ba6a5",
+      "row_count": null,
+      "size_bytes": 140
+    }
+  },
+  "version": "1.0"
+}

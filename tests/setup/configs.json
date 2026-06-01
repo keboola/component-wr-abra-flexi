@@ -1,0 +1,103 @@
+[
+  {
+    "name": "06_testConnection",
+    "description": "Verify API connection with valid credentials",
+    "config": {
+      "action": "testConnection",
+      "parameters": {
+        "base_url": "DUMMY_URL",
+        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD"
+      }
+    }
+  },
+  {
+    "name": "07_listEvidences",
+    "description": "Load available evidence types for the UI dropdown",
+    "config": {
+      "action": "listEvidences",
+      "parameters": {
+        "base_url": "DUMMY_URL",
+        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD"
+      }
+    }
+  },
+  {
+    "name": "01_happy_path_adresar",
+    "description": "Write two address-book records using external IDs (upsert)",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "DUMMY_URL",
+        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "adresar",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": false
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "adresar_happy.csv"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "02_partial_failure",
+    "description": "Write batch with one valid and one invalid row (bad country code); exit 0, errors in write_errors table",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "DUMMY_URL",
+        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "adresar",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": false
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "adresar_with_error.csv"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "03_fail_on_error_true",
+    "description": "Write batch with one invalid row and fail_on_error=true; component aborts with exit 1",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "DUMMY_URL",
+        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "adresar",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": true
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "adresar_with_error.csv"}
+          ]
+        }
+      }
+    }
+  }
+]

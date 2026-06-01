@@ -87,16 +87,30 @@ class FlexiBeeWriterClient:
         win = payload.get("winstrom", {})
         stats = win.get("stats", {})
         results = win.get("results", [])
-        failed_records = [
-            {
-                "id": str(r.get("id", "")),
-                "error": r.get("error", ""),
-                "field": r.get("for", ""),
-                "code": r.get("code", ""),
-            }
-            for r in results
-            if r.get("error") or r.get("success") is False
-        ]
+        failed_records = []
+        for r in results:
+            errors_list = r.get("errors")
+            if errors_list:
+                # Actual API format: {"request-id": "...", "errors": [{"message": "...", "messageCode": "..."}]}
+                first_err = errors_list[0] if isinstance(errors_list, list) and errors_list else {}
+                failed_records.append(
+                    {
+                        "id": str(r.get("request-id", r.get("id", ""))),
+                        "error": first_err.get("message", ""),
+                        "field": first_err.get("for", ""),
+                        "code": first_err.get("messageCode", first_err.get("code", "")),
+                    }
+                )
+            elif r.get("error"):
+                # Documented format: {"id": 105, "error": "...", "for": "field", "code": "..."}
+                failed_records.append(
+                    {
+                        "id": str(r.get("id", "")),
+                        "error": r.get("error", ""),
+                        "field": r.get("for", ""),
+                        "code": r.get("code", ""),
+                    }
+                )
         return WriteResult(
             created=int(stats.get("created", 0)),
             updated=int(stats.get("updated", 0)),

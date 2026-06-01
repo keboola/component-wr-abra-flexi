@@ -40,7 +40,7 @@ def test_write_records_all_success():
             "winstrom": {
                 "success": True,
                 "stats": {"created": 2, "updated": 0, "failed": 0},
-                "results": [{"id": 1, "success": True}, {"id": 2, "success": True}],
+                "results": [{"id": 1}, {"id": 2}],
             }
         },
     )
@@ -51,7 +51,33 @@ def test_write_records_all_success():
     assert result.failed_records == []
 
 
-def test_write_records_partial_failure_400_is_parsed():
+def test_write_records_partial_failure_actual_format():
+    """Real FlexiBee API uses request-id / errors[].message / errors[].messageCode."""
+    client = _make_client()
+    client._http.post_raw.return_value = _raw_response(
+        400,
+        {
+            "winstrom": {
+                "success": "false",
+                "stats": {"created": "1", "updated": "0", "failed": "1"},
+                "results": [
+                    {"id": 123},
+                    {
+                        "request-id": "ext:B",
+                        "errors": [{"message": "ic already exists", "messageCode": "UNIQUE"}],
+                    },
+                ],
+            }
+        },
+    )
+    result = client.write_records("adresar", [{"id": "ext:A"}, {"id": "ext:B"}])
+    assert result.created == 1
+    assert result.failed == 1
+    assert result.failed_records == [{"id": "ext:B", "error": "ic already exists", "field": "", "code": "UNIQUE"}]
+
+
+def test_write_records_partial_failure_documented_format():
+    """Backward compat: documented format uses flat id/error/for/code keys."""
     client = _make_client()
     client._http.post_raw.return_value = _raw_response(
         400,

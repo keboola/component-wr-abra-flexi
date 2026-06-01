@@ -1,0 +1,3 @@
+id,error,field,code
+ext:KBC_VCR_001,Nemáte oprávnění na vytvoření záznamu v evidenci Adresář. (Role uživatele: JENCIST) [ext:KBC_VCR_001],,importXmlNeopravnenyCreate
+ext:KBC_VCR_BAD,Nemáte oprávnění na vytvoření záznamu v evidenci Adresář. (Role uživatele: JENCIST) [ext:KBC_VCR_BAD],,importXmlNeopravnenyCreate

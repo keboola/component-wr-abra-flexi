@@ -1,0 +1,3 @@
+kod,nazev,stat
+KBC_VCR_001,VCR Test Company Alpha,code:CZ
+KBC_VCR_BAD,VCR Bad Record - invalid country,code:INVALID_ZZ_9999

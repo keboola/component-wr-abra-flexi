@@ -14,7 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "keboola.datadirtest>=2.0.0",
+    "keboola.datadirtest>=2.2.0",
     "pytest>=9.0.2",
     "ruff>=0.15.2",
 ]
