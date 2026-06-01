@@ -88,8 +88,7 @@ class Component(ComponentBase):
             reader = csv.DictReader(in_file)
             if reader.fieldnames is None or cfg.id_column not in reader.fieldnames:
                 raise UserException(
-                    f"Input table has no column '{cfg.id_column}'. "
-                    f"Available columns: {reader.fieldnames}"
+                    f"Input table has no column '{cfg.id_column}'. Available columns: {reader.fieldnames}"
                 )
             for batch in chunked(reader, cfg.batch_size):
                 records = [build_winstrom_record(row, cfg.id_column, cfg.id_type) for row in batch]

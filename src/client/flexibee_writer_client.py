@@ -81,8 +81,7 @@ class FlexiBeeWriterClient:
             payload = response.json()
         except ValueError as exc:
             raise FlexiBeeClientError(
-                f"Unexpected non-JSON response (HTTP {response.status_code}) from '{evidence}': "
-                f"{response.text[:500]}"
+                f"Unexpected non-JSON response (HTTP {response.status_code}) from '{evidence}': {response.text[:500]}"
             ) from exc
 
         win = payload.get("winstrom", {})
@@ -109,9 +108,7 @@ class FlexiBeeWriterClient:
         """Return (evidencePath, evidenceName) pairs for the connected company."""
         endpoint = f"c/{self.company}/evidence-list.json"
         try:
-            data = self._http.get(
-                endpoint_path=endpoint, verify=self.ssl_verify, timeout=self._HTTP_TIMEOUT
-            )
+            data = self._http.get(endpoint_path=endpoint, verify=self.ssl_verify, timeout=self._HTTP_TIMEOUT)
         except requests.RequestException as exc:
             raise FlexiBeeClientError(f"Could not list evidences: {exc}") from exc
         evidences = data.get("evidences", {}).get("evidence", [])

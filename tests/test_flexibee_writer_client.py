@@ -69,9 +69,7 @@ def test_write_records_partial_failure_400_is_parsed():
     result = client.write_records("adresar", [{"id": "ext:A"}, {"id": "ext:B"}])
     assert result.created == 1
     assert result.failed == 1
-    assert result.failed_records == [
-        {"id": "ext:B", "error": "ic already exists", "field": "ic", "code": "UNIQUE"}
-    ]
+    assert result.failed_records == [{"id": "ext:B", "error": "ic already exists", "field": "ic", "code": "UNIQUE"}]
 
 
 def test_write_records_auth_error_raises():
