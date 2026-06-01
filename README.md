@@ -1,83 +1,41 @@
-wr-abra-flexi
-=============
+# ABRA Flexi Writer
 
-Description
+Writes rows from a Keboola Storage input table into an ABRA Flexi (formerly FlexiBee) evidence type (e.g. `adresar`, `faktura-vydana`) via the FlexiBee REST API.
 
-**Table of Contents:**
+Each configuration row targets one evidence type. Records are upserted in batches: the value of a chosen ID column becomes the FlexiBee record identifier — either an external ID (`ext:`) for idempotent upserts, or an internal numeric ID for updating existing records. Records that the API rejects are written to a `write_errors` output table (id, error, field, code) so you can review and re-run them; set **Fail on error** to abort the whole job on the first failure instead.
 
-[TOC]
+## Configuration
 
-Functionality Notes
-===================
+### Connection (per configuration)
 
-Prerequisites
-=============
+- **Instance URL** – base URL of the ABRA Flexi instance (e.g. `https://demo.flexibee.eu`).
+- **Company** – company identifier (firma) as it appears in the API path.
+- **Username / Password** – HTTP Basic credentials with REST API write access.
+- **Verify TLS** – disable only for self-signed certificates on on-premises installs.
 
-Ensure you have the necessary API token, register the application, etc.
+Use **Test Connection** to validate the credentials.
 
-Features
-========
+### Evidence row
 
-| **Feature**             | **Description**                               |
-|-------------------------|-----------------------------------------------|
-| Generic UI Form         | Dynamic UI form for easy configuration.       |
-| Row-Based Configuration | Allows structuring the configuration in rows. |
-| OAuth                   | OAuth authentication enabled.                 |
-| Incremental Loading     | Fetch data in new increments.                 |
-| Backfill Mode           | Supports seamless backfill setup.             |
-| Date Range Filter       | Specify the date range for data retrieval.    |
+- **Evidence** – the ABRA Flexi evidence type to write into (pick from the dropdown).
+- **ID column** – the input-table column whose value identifies each record.
+- **ID type** – `ext` upserts on an external ID; `internal` updates by FlexiBee numeric ID.
+- **Batch size** – records sent per API request (1–500).
+- **Fail on error** – abort on the first rejected record instead of collecting failures in the `write_errors` table.
 
-Supported Endpoints
-===================
+## Development
 
-If you need additional endpoints, please submit your request to
-[ideas.keboola.com](https://ideas.keboola.com/).
+Clone this repository and run tests and linting with the following commands:
 
-Configuration
-=============
+```bash
+uv run pytest                        # run all tests
+uv run ruff check src tests          # lint
+uv run ruff format src tests         # format
+```
 
-Param 1
--------
-Details about parameter 1.
+For API reference and documentation, see the [FlexiBee API docs](https://www.flexibee.eu/api/).
 
-Param 2
--------
-Details about parameter 2.
-
-Output
-======
-
-Provides a list of tables, foreign keys, and schema.
-
-Development
------------
-
-To customize the local data folder path, replace the `CUSTOM_FOLDER` placeholder with your desired path in the `docker-compose.yml` file:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    volumes:
-      - ./:/code
-      - ./CUSTOM_FOLDER:/data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Clone this repository, initialize the workspace, and run the component using the following
-commands:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-git clone  component-wr-abra-flexi
-cd component-wr-abra-flexi
-docker-compose build
-docker-compose run --rm dev
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Run the test suite and perform lint checks using this command:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-docker-compose run --rm test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Integration
-===========
+## Integration
 
 For details about deployment and integration with Keboola, refer to the
 [deployment section of the developer
