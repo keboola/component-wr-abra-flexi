@@ -1,1 +1,53 @@
-{}
+{
+  "type": "object",
+  "title": "Evidence write configuration",
+  "required": ["evidence", "id_column"],
+  "properties": {
+    "evidence": {
+      "type": "string",
+      "title": "Evidence type",
+      "description": "ABRA Flexi evidence path to write",
+      "format": "select",
+      "options": {
+        "async": {
+          "label": "Re-load evidence types",
+          "action": "listEvidences",
+          "autoload": ["parameters.base_url", "parameters.company", "parameters.username"]
+        }
+      },
+      "propertyOrder": 1
+    },
+    "id_column": {
+      "type": "string",
+      "title": "ID column",
+      "description": "Input column whose value identifies the record",
+      "propertyOrder": 2
+    },
+    "id_type": {
+      "type": "string",
+      "title": "ID type",
+      "description": "ext = upsert on external ID; internal = update by FlexiBee numeric ID",
+      "enum": ["ext", "internal"],
+      "options": {
+        "enum_titles": ["External ID (ext)", "Internal FlexiBee ID (internal)"]
+      },
+      "default": "ext",
+      "propertyOrder": 3
+    },
+    "batch_size": {
+      "type": "integer",
+      "title": "Batch size",
+      "default": 100,
+      "minimum": 1,
+      "maximum": 500,
+      "propertyOrder": 4
+    },
+    "fail_on_error": {
+      "type": "boolean",
+      "title": "Fail on error",
+      "description": "Abort the job on the first record error instead of routing to write_errors",
+      "default": false,
+      "propertyOrder": 5
+    }
+  }
+}
