@@ -84,33 +84,26 @@ class FlexiBeeWriterClient:
                 f"Unexpected non-JSON response (HTTP {response.status_code}) from '{evidence}': {response.text[:500]}"
             ) from exc
 
+        # FlexiBee per-record results look like:
+        #   {"request-id": "ext:KOD", "errors": [{"message": "...", "messageCode": "...", "for": "..."}]}
+        # Records without an `errors` list succeeded.
         win = payload.get("winstrom", {})
         stats = win.get("stats", {})
         results = win.get("results", [])
         failed_records = []
         for r in results:
             errors_list = r.get("errors")
-            if errors_list:
-                # Actual API format: {"request-id": "...", "errors": [{"message": "...", "messageCode": "..."}]}
-                first_err = errors_list[0] if isinstance(errors_list, list) and errors_list else {}
-                failed_records.append(
-                    {
-                        "id": str(r.get("request-id", r.get("id", ""))),
-                        "error": first_err.get("message", ""),
-                        "field": first_err.get("for", ""),
-                        "code": first_err.get("messageCode", first_err.get("code", "")),
-                    }
-                )
-            elif r.get("error"):
-                # Documented format: {"id": 105, "error": "...", "for": "field", "code": "..."}
-                failed_records.append(
-                    {
-                        "id": str(r.get("id", "")),
-                        "error": r.get("error", ""),
-                        "field": r.get("for", ""),
-                        "code": r.get("code", ""),
-                    }
-                )
+            if not errors_list:
+                continue
+            first_err = errors_list[0]
+            failed_records.append(
+                {
+                    "id": str(r.get("request-id", "")),
+                    "error": first_err.get("message", ""),
+                    "field": first_err.get("for", ""),
+                    "code": first_err.get("messageCode", ""),
+                }
+            )
         return WriteResult(
             created=int(stats.get("created", 0)),
             updated=int(stats.get("updated", 0)),
