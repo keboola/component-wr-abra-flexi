@@ -48,6 +48,33 @@
       "description": "Abort the job on the first record error instead of routing to write_errors",
       "default": false,
       "propertyOrder": 5
+    },
+    "column_mapping": {
+      "type": "array",
+      "title": "Column Mapping",
+      "description": "Maps input CSV columns to FlexiBee field names. Only mapped columns are sent; unmapped columns are dropped. Leave empty to send all columns as-is.",
+      "format": "table",
+      "items": {
+        "type": "object",
+        "required": ["source", "destination"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source Column",
+            "description": "Column name from the input CSV file",
+            "watch": {"columns": "_metadata_.table.columns"},
+            "enumSource": "columns",
+            "propertyOrder": 1
+          },
+          "destination": {
+            "type": "string",
+            "title": "FlexiBee Field",
+            "description": "Target FlexiBee field name (e.g. nazev, ulice, psc)",
+            "propertyOrder": 2
+          }
+        }
+      },
+      "propertyOrder": 6
     }
   }
 }
