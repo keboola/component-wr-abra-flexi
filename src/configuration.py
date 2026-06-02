@@ -7,7 +7,15 @@ options) before the component runs, so this single model receives both.
 import logging
 
 from keboola.component.exceptions import UserException
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+
+
+class ColumnMapping(BaseModel):
+    """Maps one input CSV column to a FlexiBee destination field name."""
+
+    model_config = ConfigDict(extra="ignore")
+    source: str
+    destination: str
 
 
 class Configuration(BaseModel):
@@ -25,6 +33,7 @@ class Configuration(BaseModel):
     id_type: str = "ext"
     batch_size: int = 100
     fail_on_error: bool = False
+    column_mapping: list[ColumnMapping] = []
 
     def __init__(self, **data):
         try:

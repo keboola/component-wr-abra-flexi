@@ -10,7 +10,7 @@ from keboola.component.sync_actions import SelectElement, ValidationResult
 from keboola.vcr import DefaultSanitizer
 
 from client.flexibee_writer_client import FlexiBeeClientError, FlexiBeeWriterClient
-from configuration import Configuration
+from configuration import ColumnMapping, Configuration
 
 # Picked up automatically by the datadirtest VCR recorder. Strips the HTTP Basic
 # Authorization header and redacts password fields so no credentials are written
@@ -32,6 +32,35 @@ def chunked(rows: Iterable[dict], size: int) -> Iterator[list[dict]]:
             batch = []
     if batch:
         yield batch
+
+
+def apply_column_mapping(row: dict, id_column: str, mapping: list[ColumnMapping]) -> dict:
+    """Rename and filter input CSV columns per mapping before building the FlexiBee payload.
+
+    - Empty mapping → passthrough: all columns returned unchanged.
+    - With mapping: only mapped columns are kept (unmapped columns are dropped).
+    - The `id_column` is always preserved under its original source name so that
+      `build_winstrom_record` can extract it regardless of the mapping.
+    - If a mapping entry's source column is not in the row, it is silently skipped.
+    - If the id_column appears in the mapping list, the rename is ignored — the column
+      stays under its original source name (the id is handled separately).
+    """
+    if not mapping:
+        return row
+
+    result: dict = {}
+
+    # Always carry the id_column through unchanged
+    if id_column in row:
+        result[id_column] = row[id_column]
+
+    for cm in mapping:
+        if cm.source == id_column:
+            continue  # id_column is handled above — do not rename it
+        if cm.source in row:
+            result[cm.destination] = row[cm.source]
+
+    return result
 
 
 def build_winstrom_record(row: dict, id_column: str, id_type: str) -> dict:
@@ -91,7 +120,8 @@ class Component(ComponentBase):
                     f"Input table has no column '{cfg.id_column}'. Available columns: {reader.fieldnames}"
                 )
             for batch in chunked(reader, cfg.batch_size):
-                records = [build_winstrom_record(row, cfg.id_column, cfg.id_type) for row in batch]
+                mapped = [apply_column_mapping(row, cfg.id_column, cfg.column_mapping) for row in batch]
+                records = [build_winstrom_record(row, cfg.id_column, cfg.id_type) for row in mapped]
                 try:
                     result = client.write_records(cfg.evidence, records)
                 except FlexiBeeClientError as exc:

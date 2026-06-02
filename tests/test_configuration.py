@@ -59,3 +59,16 @@ def test_batch_size_out_of_range_raises_user_exception():
 def test_id_type_internal_accepted():
     cfg = Configuration(**dict(BASE, id_type="internal"))
     assert cfg.id_type == "internal"
+
+
+def test_column_mapping_defaults_to_empty():
+    cfg = Configuration(**BASE)
+    assert cfg.column_mapping == []
+
+
+def test_column_mapping_parses_list():
+    data = dict(BASE, column_mapping=[{"source": "company_name", "destination": "nazev"}])
+    cfg = Configuration(**data)
+    assert len(cfg.column_mapping) == 1
+    assert cfg.column_mapping[0].source == "company_name"
+    assert cfg.column_mapping[0].destination == "nazev"
