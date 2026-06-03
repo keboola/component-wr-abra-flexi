@@ -58,8 +58,7 @@
         "async": {
           "label": "Load columns & FlexiBee fields",
           "action": "loadColumnMapping"
-        },
-        "gridColumn":"6"
+        }
       },
       "propertyOrder": 9
     },
