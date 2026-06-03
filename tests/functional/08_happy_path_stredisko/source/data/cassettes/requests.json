@@ -1,0 +1,7 @@
+{
+  "_metadata": {"freeze_time": "2026-06-03T11:24:28", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-06-03T09:24:30.099396+00:00"},
+  "interactions": [
+    {"request": {"body": "{\"winstrom\": {\"stredisko\": [{\"nazev\": \"VCR Cost Center One\", \"id\": \"ext:KBC_VCR_S1\"}, {\"nazev\": \"VCR Cost Center Two\", \"id\": \"ext:KBC_VCR_S2\"}]}}", "headers": {"Accept": ["*/*"], "Content-Length": ["145"], "Content-Type": ["application/json"]}, "method": "POST", "uri": "https://keboola.flexibee.eu/c/fiktivni_firma/stredisko.json"}, "response": {"body": {"string": "{\"winstrom\":{\"@version\":\"1.0\",\"success\":\"true\",\"stats\":{\"created\":\"0\",\"updated\":\"2\",\"deleted\":\"0\",\"skipped\":\"0\",\"failed\":\"0\"},\"results\":[{\"id\":\"2\",\"request-id\":\"ext:KBC_VCR_S1\",\"ref\":\"/c/fiktivni_firma/stredisko/2.json\"},{\"id\":\"3\",\"request-id\":\"ext:KBC_VCR_S2\",\"ref\":\"/c/fiktivni_firma/stredisko/3.json\"}]}}"}, "headers": {"Content-Length": ["307"], "Content-Type": ["application/json"]}, "status": {"code": 201, "message": "Created"}}}
+  ],
+  "version": 1
+}

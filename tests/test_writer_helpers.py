@@ -1,5 +1,27 @@
-from component import apply_column_mapping, build_winstrom_record, chunked
+from component import (
+    apply_column_mapping,
+    build_column_mapping_prefill,
+    build_winstrom_record,
+    chunked,
+)
 from configuration import ColumnMapping
+
+
+def test_prefill_auto_matches_identical_field_names_and_skips_id():
+    rows = build_column_mapping_prefill(
+        columns=["kod", "nazev", "company_name", "psc"],
+        id_column="kod",
+        field_names={"nazev", "ulice", "psc"},
+    )
+    assert rows == [
+        {"source": "nazev", "destination": "nazev"},
+        {"source": "company_name", "destination": ""},
+        {"source": "psc", "destination": "psc"},
+    ]
+
+
+def test_prefill_empty_columns():
+    assert build_column_mapping_prefill([], "kod", {"nazev"}) == []
 
 
 def test_chunked_splits_evenly():

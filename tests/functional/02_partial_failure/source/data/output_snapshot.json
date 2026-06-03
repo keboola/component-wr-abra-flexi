@@ -9,9 +9,9 @@
         "field",
         "code"
       ],
-      "hash": "sha256:6d5cd6c96192ec96b556fc9e089bf5708acffd2f19e83160907d83d237ed29c5",
-      "row_count": 3,
-      "size_bytes": 335
+      "hash": "sha256:0f0b544763783780bd02109456bf06459e5a5517e752497709a7896f888498e8",
+      "row_count": 2,
+      "size_bytes": 144
     },
     "write_errors.csv.manifest": {
       "columns": null,

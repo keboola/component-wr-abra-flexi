@@ -1,0 +1,10 @@
+{
+  "action": "loadEvidenceFields",
+  "parameters": {
+    "base_url": "https://keboola.flexibee.eu",
+    "company": "fiktivni_firma",
+    "username": "DUMMY_USER",
+    "#password": "DUMMY_PASSWORD",
+    "evidence": "adresar"
+  }
+}

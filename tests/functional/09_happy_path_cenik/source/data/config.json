@@ -1,0 +1,23 @@
+{
+  "action": "run",
+  "parameters": {
+    "base_url": "https://keboola.flexibee.eu",
+    "company": "fiktivni_firma",
+    "username": "DUMMY_USER",
+    "#password": "DUMMY_PASSWORD",
+    "evidence": "cenik",
+    "id_column": "kod",
+    "id_type": "ext",
+    "batch_size": 100,
+    "fail_on_error": false
+  },
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "destination": "cenik.csv"
+        }
+      ]
+    }
+  }
+}

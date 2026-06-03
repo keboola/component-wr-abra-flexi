@@ -1,0 +1,7 @@
+{
+  "_metadata": {"freeze_time": "2026-06-03T11:24:28", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-06-03T09:24:30.417024+00:00"},
+  "interactions": [
+    {"request": {"body": "{\"winstrom\": {\"cenik\": [{\"nazev\": \"VCR Service Item One\", \"typZasobyK\": \"typZasoby.sluzba\", \"id\": \"ext:KBC_VCR_P1\"}, {\"nazev\": \"VCR Service Item Two\", \"typZasobyK\": \"typZasoby.sluzba\", \"id\": \"ext:KBC_VCR_P2\"}]}}", "headers": {"Accept": ["*/*"], "Content-Length": ["211"], "Content-Type": ["application/json"]}, "method": "POST", "uri": "https://keboola.flexibee.eu/c/fiktivni_firma/cenik.json"}, "response": {"body": {"string": "{\"winstrom\":{\"@version\":\"1.0\",\"success\":\"true\",\"stats\":{\"created\":\"0\",\"updated\":\"2\",\"deleted\":\"0\",\"skipped\":\"0\",\"failed\":\"0\"},\"results\":[{\"id\":\"29\",\"request-id\":\"ext:KBC_VCR_P1\",\"ref\":\"/c/fiktivni_firma/cenik/29.json\"},{\"id\":\"30\",\"request-id\":\"ext:KBC_VCR_P2\",\"ref\":\"/c/fiktivni_firma/cenik/30.json\"}]}}"}, "headers": {"Content-Length": ["303"], "Content-Type": ["application/json"]}, "status": {"code": 201, "message": "Created"}}}
+  ],
+  "version": 1
+}

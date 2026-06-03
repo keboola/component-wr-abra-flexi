@@ -5,8 +5,8 @@
     "config": {
       "action": "testConnection",
       "parameters": {
-        "base_url": "DUMMY_URL",
-        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
         "username": "DUMMY_USER",
         "#password": "DUMMY_PASSWORD"
       }
@@ -18,8 +18,8 @@
     "config": {
       "action": "listEvidences",
       "parameters": {
-        "base_url": "DUMMY_URL",
-        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
         "username": "DUMMY_USER",
         "#password": "DUMMY_PASSWORD"
       }
@@ -31,8 +31,8 @@
     "config": {
       "action": "run",
       "parameters": {
-        "base_url": "DUMMY_URL",
-        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
         "username": "DUMMY_USER",
         "#password": "DUMMY_PASSWORD",
         "evidence": "adresar",
@@ -56,8 +56,8 @@
     "config": {
       "action": "run",
       "parameters": {
-        "base_url": "DUMMY_URL",
-        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
         "username": "DUMMY_USER",
         "#password": "DUMMY_PASSWORD",
         "evidence": "adresar",
@@ -81,8 +81,8 @@
     "config": {
       "action": "run",
       "parameters": {
-        "base_url": "DUMMY_URL",
-        "company": "keboola_czech_s_r_o__2024_02_08_0909",
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
         "username": "DUMMY_USER",
         "#password": "DUMMY_PASSWORD",
         "evidence": "adresar",
@@ -97,6 +97,99 @@
             {"destination": "adresar_with_error.csv"}
           ]
         }
+      }
+    }
+  },
+  {
+    "name": "08_happy_path_stredisko",
+    "description": "Write two cost centers (stredisko) using external IDs (upsert) — second write object",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "stredisko",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": false
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "stredisko.csv"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "09_happy_path_cenik",
+    "description": "Write two price-list items (cenik, service type) using external IDs (upsert) — third write object",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "cenik",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": false
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "cenik.csv"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "10_partial_column_mapping",
+    "description": "Write adresar with partial column_mapping: rename 2 of 4 data columns (company_name→nazev, street→ulice), drop city/zip",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "adresar",
+        "id_column": "kod",
+        "id_type": "ext",
+        "batch_size": 100,
+        "fail_on_error": false,
+        "column_mapping": [
+          {"source": "company_name", "destination": "nazev"},
+          {"source": "street", "destination": "ulice"}
+        ]
+      },
+      "storage": {
+        "input": {
+          "tables": [
+            {"destination": "adresar_partial_mapping.csv"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "11_loadEvidenceFields",
+    "description": "Sync action: load writable FlexiBee fields for the adresar evidence (column-mapping destination options)",
+    "config": {
+      "action": "loadEvidenceFields",
+      "parameters": {
+        "base_url": "https://keboola.flexibee.eu",
+        "company": "fiktivni_firma",
+        "username": "DUMMY_USER",
+        "#password": "DUMMY_PASSWORD",
+        "evidence": "adresar"
       }
     }
   }

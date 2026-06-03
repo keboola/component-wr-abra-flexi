@@ -1,8 +1,8 @@
 {
   "action": "run",
   "parameters": {
-    "base_url": "https://keboola-czech.flexibee.eu",
-    "company": "keboola_czech_s_r_o__2024_02_08_0909",
+    "base_url": "https://keboola.flexibee.eu",
+    "company": "fiktivni_firma",
     "username": "DUMMY_USER",
     "#password": "DUMMY_PASSWORD",
     "evidence": "adresar",

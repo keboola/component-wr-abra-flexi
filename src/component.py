@@ -2,8 +2,10 @@
 
 import csv
 import logging
+import os
 from collections.abc import Iterable, Iterator
 
+import requests
 from keboola.component import ComponentBase, UserException
 from keboola.component.base import sync_action
 from keboola.component.sync_actions import SelectElement, ValidationResult
@@ -12,9 +14,15 @@ from keboola.vcr import DefaultSanitizer
 from client.flexibee_writer_client import FlexiBeeClientError, FlexiBeeWriterClient
 from configuration import ColumnMapping, Configuration
 
-# Picked up automatically by the datadirtest VCR recorder. Strips the HTTP Basic
-# Authorization header and redacts password fields so no credentials are written
-# to committed cassettes.
+# Keboola Storage API host, derived from the stack the component runs on. Used by the
+# column-mapping sync action to read an input table's columns at config time (when no
+# data is staged yet). Mirrors the convention used across CF writer components.
+_STACK_SUFFIX = os.environ.get("KBC_STACKID", "connection.keboola.com").replace("connection.", "")
+
+# Picked up automatically by the datadirtest VCR recorder. Only the credential needs
+# sanitizing: DefaultSanitizer strips the HTTP Basic Authorization header and redacts
+# password fields. The ABRA Flexi base_url is not secret — it lives in configs.json and
+# is recorded as-is, so no URL rewriting is needed for replay to match.
 VCR_SANITIZERS = [
     DefaultSanitizer(additional_sensitive_fields=["#password", "password"]),
 ]
@@ -22,9 +30,9 @@ VCR_SANITIZERS = [
 _ERROR_COLUMNS = ["id", "error", "field", "code"]
 
 
-def chunked(rows: Iterable[dict], size: int) -> Iterator[list[dict]]:
+def chunked[T](rows: Iterable[T], size: int) -> Iterator[list[T]]:
     """Yield successive lists of at most `size` items from `rows`."""
-    batch: list[dict] = []
+    batch: list[T] = []
     for row in rows:
         batch.append(row)
         if len(batch) >= size:
@@ -61,6 +69,16 @@ def apply_column_mapping(row: dict, id_column: str, mapping: list[ColumnMapping]
             result[cm.destination] = row[cm.source]
 
     return result
+
+
+def build_column_mapping_prefill(columns: list[str], id_column: str, field_names: set[str]) -> list[dict]:
+    """Build prefilled `column_mapping` rows for the loadColumnMapping sync action.
+
+    One row per input column except the `id_column` (handled separately at write time).
+    A destination is auto-filled only when an identically named FlexiBee field exists;
+    otherwise it is left blank for the user to pick.
+    """
+    return [{"source": col, "destination": col if col in field_names else ""} for col in columns if col != id_column]
 
 
 def build_winstrom_record(row: dict, id_column: str, id_type: str) -> dict:
@@ -184,6 +202,67 @@ class Component(ComponentBase):
         except Exception as exc:  # noqa: BLE001
             raise UserException(f"Could not list evidences: {exc}")
         return [SelectElement(value=path, label=f"{name} ({path})") for path, name in evidences]
+
+    def _get_input_table_columns(self, table_id: str) -> list[str]:
+        """Read a Storage table's column names via the Storage API.
+
+        Sync actions run at config time with no staged data, so the input columns
+        cannot be read from disk — they are fetched from Storage by table id.
+        """
+        url = f"https://connection.{_STACK_SUFFIX}/v2/storage/tables/{table_id}"
+        headers = {"X-StorageApi-Token": self.environment_variables.token}
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise UserException(f"Could not read columns of input table '{table_id}' from Keboola Storage: {exc}")
+        return response.json().get("columns", [])
+
+    def _flexibee_fields_metadata(self, cfg: Configuration) -> list[dict]:
+        """FlexiBee writable fields for `cfg.evidence`, shaped for the destination dropdown."""
+        client = self._build_client(cfg)
+        try:
+            fields = client.list_evidence_fields(cfg.evidence)
+        except FlexiBeeClientError as exc:
+            raise UserException(str(exc))
+        return [
+            {"field_name": f["name"], "label": f"{f['name']} (required)" if f["mandatory"] else f["name"]}
+            for f in fields
+        ]
+
+    @sync_action("loadEvidenceFields")
+    def load_evidence_fields(self) -> dict:
+        """Populate the destination-field dropdown with the evidence's writable FlexiBee fields."""
+        cfg = Configuration(**self.configuration.parameters)
+        if not cfg.evidence:
+            raise UserException("Select an evidence type before loading its fields.")
+        return {"type": "data", "data": {"_metadata_": {"flexibee_fields": self._flexibee_fields_metadata(cfg)}}}
+
+    @sync_action("loadColumnMapping")
+    def load_column_mapping(self) -> dict:
+        """Prefill `column_mapping`: one row per input column, FlexiBee fields offered as destinations.
+
+        Reads the input table's columns from Storage and the evidence's writable fields
+        from FlexiBee, builds a mapping row for each non-id input column (auto-matching a
+        destination when the names are identical), and stores both lists in `_metadata_`
+        so the source/destination dropdowns can render.
+        """
+        cfg = Configuration(**self.configuration.parameters)
+        if not cfg.evidence:
+            raise UserException("Select an evidence type before loading the column mapping.")
+        input_mappings = self.configuration.tables_input_mapping
+        if len(input_mappings) != 1:
+            raise UserException(f"Map exactly one input table to this row first (found {len(input_mappings)}).")
+
+        columns = self._get_input_table_columns(input_mappings[0].source)
+        flexibee_fields = self._flexibee_fields_metadata(cfg)
+        field_names = {f["field_name"] for f in flexibee_fields}
+        mapping = build_column_mapping_prefill(columns, cfg.id_column, field_names)
+
+        data = dict(self.configuration.parameters)
+        data["column_mapping"] = mapping
+        data["_metadata_"] = {"table": {"columns": columns}, "flexibee_fields": flexibee_fields}
+        return {"type": "data", "data": data}
 
 
 if __name__ == "__main__":

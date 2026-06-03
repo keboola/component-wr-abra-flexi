@@ -103,3 +103,28 @@ def test_list_evidences_parses_pairs():
         "evidences": {"evidence": [{"evidencePath": "adresar", "evidenceName": "Adresar"}]}
     }
     assert client.list_evidences() == [("adresar", "Adresar")]
+
+
+def test_list_evidence_fields_keeps_only_writable():
+    client = _make_client()
+    client._http.get.return_value = {
+        "properties": {
+            "property": [
+                {"propertyName": "kod", "isWritable": "true", "mandatory": "true"},
+                {"propertyName": "nazev", "isWritable": "true", "mandatory": "false"},
+                {"propertyName": "id", "isWritable": "false", "mandatory": "false"},
+                {"propertyName": "", "isWritable": "true", "mandatory": "false"},
+            ]
+        }
+    }
+    assert client.list_evidence_fields("adresar") == [
+        {"name": "kod", "mandatory": True},
+        {"name": "nazev", "mandatory": False},
+    ]
+
+
+def test_list_evidence_fields_network_error_raises():
+    client = _make_client()
+    client._http.get.side_effect = requests.ConnectionError("boom")
+    with pytest.raises(FlexiBeeClientError, match="Could not load fields"):
+        client.list_evidence_fields("adresar")

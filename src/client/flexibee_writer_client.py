@@ -121,6 +121,27 @@ class FlexiBeeWriterClient:
         evidences = data.get("evidences", {}).get("evidence", [])
         return [(e.get("evidencePath", ""), e.get("evidenceName", "")) for e in evidences]
 
+    def list_evidence_fields(self, evidence: str) -> list[dict]:
+        """Return the writable fields of an evidence as ``[{"name", "mandatory"}]``.
+
+        Reads the evidence's `properties.json` metadata and keeps only writable
+        fields — these are the valid `column_mapping` destinations offered in the UI.
+        """
+        endpoint = f"c/{self.company}/{evidence}/properties.json"
+        try:
+            data = self._http.get(endpoint_path=endpoint, verify=self.ssl_verify, timeout=self._HTTP_TIMEOUT)
+        except requests.RequestException as exc:
+            raise FlexiBeeClientError(f"Could not load fields for evidence '{evidence}': {exc}") from exc
+        props = data.get("properties", {}).get("property", [])
+        fields = []
+        for p in props:
+            if str(p.get("isWritable", "")).lower() != "true":
+                continue
+            name = p.get("propertyName", "")
+            if name:
+                fields.append({"name": name, "mandatory": str(p.get("mandatory", "")).lower() == "true"})
+        return fields
+
     def test_connection(self) -> None:
         """Hit evidence-list to confirm auth/host. Raises FlexiBeeClientError on failure."""
         try:

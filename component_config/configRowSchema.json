@@ -49,6 +49,34 @@
       "default": false,
       "propertyOrder": 5
     },
+    "load_mapping": {
+      "type": "button",
+      "format": "sync-action",
+      "title": "Load columns & FlexiBee fields",
+      "description": "Reads the mapped input table's columns and the evidence's FlexiBee fields, then prefills the mapping below. Existing rows are replaced.",
+      "options": {
+        "async": {
+          "label": "Load columns & FlexiBee fields",
+          "action": "loadColumnMapping",
+          "autoload": ["parameters.evidence"]
+        }
+      },
+      "propertyOrder": 6
+    },
+    "reload_evidence_fields": {
+      "type": "button",
+      "format": "sync-action",
+      "title": "Reload FlexiBee fields only",
+      "description": "Refreshes the destination-field options without touching the existing mapping rows.",
+      "options": {
+        "async": {
+          "label": "Reload FlexiBee fields",
+          "action": "loadEvidenceFields",
+          "autoload": ["parameters.evidence"]
+        }
+      },
+      "propertyOrder": 7
+    },
     "column_mapping": {
       "type": "array",
       "title": "Column Mapping",
@@ -64,17 +92,42 @@
             "description": "Column name from the input CSV file",
             "watch": {"columns": "_metadata_.table.columns"},
             "enumSource": "columns",
+            "options": {"tags": true},
             "propertyOrder": 1
           },
           "destination": {
             "type": "string",
             "title": "FlexiBee Field",
-            "description": "Target FlexiBee field name (e.g. nazev, ulice, psc)",
+            "description": "Target FlexiBee field (e.g. nazev, ulice, psc). Pick from the loaded fields or type one.",
+            "format": "select",
+            "watch": {"fields": "_metadata_.flexibee_fields"},
+            "enumSource": [
+              {
+                "source": "fields",
+                "value": "{{item.field_name}}",
+                "title": "{{item.label}}"
+              }
+            ],
+            "options": {"tags": true},
             "propertyOrder": 2
           }
         }
       },
-      "propertyOrder": 6
+      "propertyOrder": 8
+    },
+    "_metadata_": {
+      "type": "object",
+      "options": {"hidden": true},
+      "properties": {
+        "table": {
+          "type": "object",
+          "properties": {
+            "columns": {"type": "array"}
+          }
+        },
+        "flexibee_fields": {"type": "array"}
+      },
+      "propertyOrder": 9
     }
   }
 }
