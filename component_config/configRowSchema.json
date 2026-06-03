@@ -57,11 +57,11 @@
       "options": {
         "async": {
           "label": "Load columns & FlexiBee fields",
-          "action": "loadColumnMapping",
-          "autoload": ["parameters.evidence"]
-        }
+          "action": "loadColumnMapping"
+        },
+        "gridColumn":"6"
       },
-      "propertyOrder": 6
+      "propertyOrder": 9
     },
     "reload_evidence_fields": {
       "type": "button",
@@ -71,11 +71,10 @@
       "options": {
         "async": {
           "label": "Reload FlexiBee fields",
-          "action": "loadEvidenceFields",
-          "autoload": ["parameters.evidence"]
+          "action": "loadEvidenceFields"
         }
       },
-      "propertyOrder": 7
+      "propertyOrder": 10
     },
     "column_mapping": {
       "type": "array",
