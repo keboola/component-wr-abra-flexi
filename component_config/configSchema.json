@@ -6,13 +6,19 @@
     "base_url": {
       "type": "string",
       "title": "Base URL",
-      "description": "ABRA Flexi instance URL, e.g. https://demo.flexibee.eu",
+      "description": "Instance URL",
+      "options": {
+        "tooltip": "ABRA Flexi instance URL, e.g. https://demo.flexibee.eu"
+      },
       "propertyOrder": 1
     },
     "company": {
       "type": "string",
       "title": "Company (firma)",
-      "description": "Company identifier (firma) from the URL path",
+      "description": "Company identifier",
+      "options": {
+        "tooltip": "Company identifier (firma) from the URL path, e.g. fiktivni_firma."
+      },
       "propertyOrder": 2
     },
     "username": {
@@ -29,7 +35,9 @@
     "ssl_verify": {
       "type": "boolean",
       "title": "Verify SSL certificate",
-      "description": "Verify TLS certificate (disable only for self-signed on-prem certs)",
+      "options": {
+        "tooltip": "Disable only for self-signed on-prem certificates."
+      },
       "default": true,
       "propertyOrder": 5
     },

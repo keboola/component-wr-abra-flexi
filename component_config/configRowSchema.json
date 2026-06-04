@@ -6,9 +6,10 @@
     "evidence": {
       "type": "string",
       "title": "Evidence type",
-      "description": "ABRA Flexi evidence path to write",
+      "description": "Evidence to write to",
       "format": "select",
       "options": {
+        "tooltip": "ABRA Flexi evidence path (e.g. adresar). Use the button to load the available types for this company.",
         "async": {
           "label": "Re-load evidence types",
           "action": "listEvidences",
@@ -20,16 +21,20 @@
     "id_column": {
       "type": "string",
       "title": "ID column",
-      "description": "Input column whose value identifies the record",
+      "description": "Record identifier column",
+      "options": {
+        "tooltip": "Input column whose value identifies the record; it becomes the FlexiBee record id."
+      },
       "propertyOrder": 2
     },
     "id_type": {
       "type": "string",
       "title": "ID type",
-      "description": "ext = upsert on external ID; internal = update by FlexiBee numeric ID",
+      "description": "How the ID is matched",
       "enum": ["ext", "internal"],
       "options": {
-        "enum_titles": ["External ID (ext)", "Internal FlexiBee ID (internal)"]
+        "enum_titles": ["External ID (ext)", "Internal FlexiBee ID (internal)"],
+        "tooltip": "ext = upsert by external ID; internal = update by FlexiBee numeric ID."
       },
       "default": "ext",
       "propertyOrder": 3
@@ -37,6 +42,9 @@
     "batch_size": {
       "type": "integer",
       "title": "Batch size",
+      "options": {
+        "tooltip": "Records sent per request (1–500)."
+      },
       "default": 100,
       "minimum": 1,
       "maximum": 500,
@@ -45,7 +53,10 @@
     "fail_on_error": {
       "type": "boolean",
       "title": "Fail on error",
-      "description": "Abort the job on the first record error instead of routing to write_errors",
+      "description": "Stop on first error",
+      "options": {
+        "tooltip": "Abort the job on the first record error instead of routing failures to the write_errors table."
+      },
       "default": false,
       "propertyOrder": 5
     },
@@ -53,8 +64,9 @@
       "type": "button",
       "format": "sync-action",
       "title": "Load columns & FlexiBee fields",
-      "description": "Adds a mapping row for each input column not yet mapped and loads the evidence's FlexiBee fields as destination options. Existing rows are preserved.",
+      "description": "Add unmapped columns; load fields",
       "options": {
+        "tooltip": "Appends a row for each input column not yet mapped and loads the evidence's FlexiBee fields as destination options. Existing rows are preserved.",
         "async": {
           "label": "Load columns & FlexiBee fields",
           "action": "loadColumnMapping"
@@ -65,8 +77,11 @@
     "column_mapping": {
       "type": "array",
       "title": "Column Mapping",
-      "description": "Maps input CSV columns to FlexiBee field names. Only mapped columns are sent; unmapped columns are dropped. Leave empty to send all columns as-is.",
+      "description": "Map input columns to FlexiBee fields",
       "format": "table",
+      "options": {
+        "tooltip": "Only mapped columns are sent; unmapped columns are dropped. Leave empty to send all columns as-is."
+      },
       "items": {
         "type": "object",
         "required": ["source", "destination"],
@@ -74,7 +89,7 @@
           "source": {
             "type": "string",
             "title": "Source Column",
-            "description": "Column name from the input CSV file",
+            "description": "Input column",
             "watch": {"columns": "_metadata_.table.columns"},
             "enumSource": "columns",
             "options": {"tags": true},
@@ -83,7 +98,7 @@
           "destination": {
             "type": "string",
             "title": "FlexiBee Field",
-            "description": "Target FlexiBee field (e.g. nazev, ulice, psc). Pick from the loaded fields or type one.",
+            "description": "Target field",
             "format": "select",
             "watch": {"fields": "_metadata_.flexibee_fields"},
             "enumSource": [
