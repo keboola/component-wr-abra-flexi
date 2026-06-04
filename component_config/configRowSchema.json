@@ -53,7 +53,7 @@
       "type": "button",
       "format": "sync-action",
       "title": "Load columns & FlexiBee fields",
-      "description": "Reads the mapped input table's columns and the evidence's FlexiBee fields, then prefills the mapping below. Existing rows are replaced.",
+      "description": "Adds a mapping row for each input column not yet mapped and loads the evidence's FlexiBee fields as destination options. Existing rows are preserved.",
       "options": {
         "async": {
           "label": "Load columns & FlexiBee fields",
@@ -61,19 +61,6 @@
         }
       },
       "propertyOrder": 9
-    },
-    "reload_evidence_fields": {
-      "type": "button",
-      "format": "sync-action",
-      "title": "Reload FlexiBee fields only",
-      "description": "Refreshes the destination-field options without touching the existing mapping rows.",
-      "options": {
-        "async": {
-          "label": "Reload FlexiBee fields",
-          "action": "loadEvidenceFields"
-        }
-      },
-      "propertyOrder": 10
     },
     "column_mapping": {
       "type": "array",

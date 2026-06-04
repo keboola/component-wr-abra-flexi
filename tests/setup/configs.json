@@ -178,19 +178,5 @@
         }
       }
     }
-  },
-  {
-    "name": "11_loadEvidenceFields",
-    "description": "Sync action: load writable FlexiBee fields for the adresar evidence (column-mapping destination options)",
-    "config": {
-      "action": "loadEvidenceFields",
-      "parameters": {
-        "base_url": "https://keboola.flexibee.eu",
-        "company": "fiktivni_firma",
-        "username": "DUMMY_USER",
-        "#password": "DUMMY_PASSWORD",
-        "evidence": "adresar"
-      }
-    }
   }
 ]

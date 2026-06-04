@@ -71,14 +71,27 @@ def apply_column_mapping(row: dict, id_column: str, mapping: list[ColumnMapping]
     return result
 
 
-def build_column_mapping_prefill(columns: list[str], id_column: str, field_names: set[str]) -> list[dict]:
-    """Build prefilled `column_mapping` rows for the loadColumnMapping sync action.
+def build_column_mapping_prefill(
+    columns: list[str],
+    id_column: str,
+    field_names: set[str],
+    existing: list[dict] | None = None,
+) -> list[dict]:
+    """Merge prefilled `column_mapping` rows for the loadColumnMapping sync action.
 
-    One row per input column except the `id_column` (handled separately at write time).
-    A destination is auto-filled only when an identically named FlexiBee field exists;
-    otherwise it is left blank for the user to pick.
+    Existing rows are preserved verbatim — user-defined mappings are never overwritten.
+    A new row is appended only for an input column that is not the `id_column` and is not
+    already mapped; its destination is auto-filled when an identically named FlexiBee field
+    exists, otherwise left blank for the user to pick.
     """
-    return [{"source": col, "destination": col if col in field_names else ""} for col in columns if col != id_column]
+    existing = existing or []
+    mapped_sources = {row.get("source") for row in existing}
+    result = list(existing)
+    for col in columns:
+        if col == id_column or col in mapped_sources:
+            continue
+        result.append({"source": col, "destination": col if col in field_names else ""})
+    return result
 
 
 def build_winstrom_record(row: dict, id_column: str, id_type: str) -> dict:
@@ -230,22 +243,15 @@ class Component(ComponentBase):
             for f in fields
         ]
 
-    @sync_action("loadEvidenceFields")
-    def load_evidence_fields(self) -> dict:
-        """Populate the destination-field dropdown with the evidence's writable FlexiBee fields."""
-        cfg = Configuration(**self.configuration.parameters)
-        if not cfg.evidence:
-            raise UserException("Select an evidence type before loading its fields.")
-        return {"type": "data", "data": {"_metadata_": {"flexibee_fields": self._flexibee_fields_metadata(cfg)}}}
-
     @sync_action("loadColumnMapping")
     def load_column_mapping(self) -> dict:
-        """Prefill `column_mapping`: one row per input column, FlexiBee fields offered as destinations.
+        """Add `column_mapping` rows for unmapped input columns; load FlexiBee fields as destinations.
 
         Reads the input table's columns from Storage and the evidence's writable fields
-        from FlexiBee, builds a mapping row for each non-id input column (auto-matching a
-        destination when the names are identical), and stores both lists in `_metadata_`
-        so the source/destination dropdowns can render.
+        from FlexiBee. Existing mapping rows are preserved — a row is appended only for an
+        input column not already mapped (auto-matching a destination when the names are
+        identical). Both lists are stored in `_metadata_` so the source/destination
+        dropdowns can render.
         """
         cfg = Configuration(**self.configuration.parameters)
         if not cfg.evidence:
@@ -257,7 +263,8 @@ class Component(ComponentBase):
         columns = self._get_input_table_columns(input_mappings[0].source)
         flexibee_fields = self._flexibee_fields_metadata(cfg)
         field_names = {f["field_name"] for f in flexibee_fields}
-        mapping = build_column_mapping_prefill(columns, cfg.id_column, field_names)
+        existing = self.configuration.parameters.get("column_mapping", [])
+        mapping = build_column_mapping_prefill(columns, cfg.id_column, field_names, existing)
 
         data = dict(self.configuration.parameters)
         data["column_mapping"] = mapping

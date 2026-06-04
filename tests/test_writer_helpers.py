@@ -24,6 +24,21 @@ def test_prefill_empty_columns():
     assert build_column_mapping_prefill([], "kod", {"nazev"}) == []
 
 
+def test_prefill_preserves_existing_and_appends_missing():
+    existing = [{"source": "company_name", "destination": "nazev"}]  # user-defined mapping
+    rows = build_column_mapping_prefill(
+        columns=["kod", "company_name", "psc"],
+        id_column="kod",
+        field_names={"nazev", "psc"},
+        existing=existing,
+    )
+    # company_name row is preserved verbatim (not overwritten); only psc is appended
+    assert rows == [
+        {"source": "company_name", "destination": "nazev"},
+        {"source": "psc", "destination": "psc"},
+    ]
+
+
 def test_chunked_splits_evenly():
     assert list(chunked([1, 2, 3, 4], 2)) == [[1, 2], [3, 4]]
 
