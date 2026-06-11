@@ -13,13 +13,31 @@ class FlexiBeeClientError(Exception):
 
 
 @dataclass
+class WriteFailure:
+    """One record that FlexiBee rejected, flattened for the error output table."""
+
+    id: str
+    error: str
+    field: str
+    code: str
+
+
+@dataclass
+class Evidence:
+    """One FlexiBee evidence type (path + human-readable name)."""
+
+    path: str
+    name: str
+
+
+@dataclass
 class WriteResult:
     """Outcome of one batch write."""
 
     created: int
     updated: int
     failed: int
-    failed_records: list[dict] = field(default_factory=list)
+    failed_records: list[WriteFailure] = field(default_factory=list)
 
 
 class FlexiBeeWriterClient:
@@ -97,12 +115,12 @@ class FlexiBeeWriterClient:
                 continue
             first_err = errors_list[0]
             failed_records.append(
-                {
-                    "id": str(r.get("request-id", "")),
-                    "error": first_err.get("message", ""),
-                    "field": first_err.get("for", ""),
-                    "code": first_err.get("messageCode", ""),
-                }
+                WriteFailure(
+                    id=str(r.get("request-id", "")),
+                    error=first_err.get("message", ""),
+                    field=first_err.get("for", ""),
+                    code=first_err.get("messageCode", ""),
+                )
             )
         return WriteResult(
             created=int(stats.get("created", 0)),
@@ -111,15 +129,15 @@ class FlexiBeeWriterClient:
             failed_records=failed_records,
         )
 
-    def list_evidences(self) -> list[tuple[str, str]]:
-        """Return (evidencePath, evidenceName) pairs for the connected company."""
+    def list_evidences(self) -> list[Evidence]:
+        """Return the evidence types (path + name) available in the connected company."""
         endpoint = f"c/{self.company}/evidence-list.json"
         try:
             data = self._http.get(endpoint_path=endpoint, verify=self.ssl_verify, timeout=self._HTTP_TIMEOUT)
         except requests.RequestException as exc:
             raise FlexiBeeClientError(f"Could not list evidences: {exc}") from exc
         evidences = data.get("evidences", {}).get("evidence", [])
-        return [(e.get("evidencePath", ""), e.get("evidenceName", "")) for e in evidences]
+        return [Evidence(path=e.get("evidencePath", ""), name=e.get("evidenceName", "")) for e in evidences]
 
     def list_evidence_fields(self, evidence: str) -> list[dict]:
         """Return the writable fields of an evidence as ``[{"name", "mandatory"}]``.
@@ -146,5 +164,5 @@ class FlexiBeeWriterClient:
         """Hit evidence-list to confirm auth/host. Raises FlexiBeeClientError on failure."""
         try:
             self.list_evidences()
-        except Exception as exc:  # noqa: BLE001 - surfaced to the user as a connection failure
+        except FlexiBeeClientError as exc:
             raise FlexiBeeClientError(f"Could not connect to ABRA Flexi: {exc}") from exc

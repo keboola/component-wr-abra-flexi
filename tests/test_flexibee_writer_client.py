@@ -4,8 +4,10 @@ import pytest
 import requests
 
 from client.flexibee_writer_client import (
+    Evidence,
     FlexiBeeClientError,
     FlexiBeeWriterClient,
+    WriteFailure,
     WriteResult,
 )
 
@@ -73,7 +75,7 @@ def test_write_records_partial_failure():
     result = client.write_records("adresar", [{"id": "ext:A"}, {"id": "ext:B"}])
     assert result.created == 1
     assert result.failed == 1
-    assert result.failed_records == [{"id": "ext:B", "error": "ic already exists", "field": "", "code": "UNIQUE"}]
+    assert result.failed_records == [WriteFailure(id="ext:B", error="ic already exists", field="", code="UNIQUE")]
 
 
 def test_write_records_auth_error_raises():
@@ -102,7 +104,7 @@ def test_list_evidences_parses_pairs():
     client._http.get.return_value = {
         "evidences": {"evidence": [{"evidencePath": "adresar", "evidenceName": "Adresar"}]}
     }
-    assert client.list_evidences() == [("adresar", "Adresar")]
+    assert client.list_evidences() == [Evidence(path="adresar", name="Adresar")]
 
 
 def test_list_evidence_fields_keeps_only_writable():

@@ -9,6 +9,8 @@ import logging
 from keboola.component.exceptions import UserException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+LOGGER = logging.getLogger(__name__)
+
 
 class ColumnMapping(BaseModel):
     """Maps one input CSV column to a FlexiBee destination field name."""
@@ -43,7 +45,7 @@ class Configuration(BaseModel):
             raise UserException(f"Validation Error: {', '.join(error_messages)}")
 
         if self.debug:
-            logging.debug("Component will run in Debug mode")
+            LOGGER.debug("Component will run in Debug mode")
 
     @field_validator("id_type")
     @classmethod

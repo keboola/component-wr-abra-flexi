@@ -130,6 +130,18 @@ def test_apply_column_mapping_missing_source_column_skipped():
     assert result == {"kod": "ABC", "nazev": "Acme"}
 
 
+def test_apply_column_mapping_empty_destination_skipped():
+    # An input column left unmapped (blank destination) must not create a "" field
+    mapping = [
+        ColumnMapping(source="company_name", destination="nazev"),
+        ColumnMapping(source="street", destination=""),
+    ]
+    row = {"kod": "ABC", "company_name": "Acme", "street": "Main St"}
+    result = apply_column_mapping(row, id_column="kod", mapping=mapping)
+    assert "" not in result
+    assert result == {"kod": "ABC", "nazev": "Acme"}
+
+
 def test_apply_column_mapping_integrates_with_build_winstrom_record():
     # Full pipeline: map columns → build record → FlexiBee payload
     mapping = [

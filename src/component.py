@@ -4,6 +4,7 @@ import csv
 import logging
 import os
 from collections.abc import Iterable, Iterator
+from dataclasses import asdict
 
 import requests
 from keboola.component import ComponentBase, UserException
@@ -13,6 +14,8 @@ from keboola.vcr import DefaultSanitizer
 
 from client.flexibee_writer_client import FlexiBeeClientError, FlexiBeeWriterClient
 from configuration import ColumnMapping, Configuration
+
+LOGGER = logging.getLogger(__name__)
 
 # Keboola Storage API host, derived from the stack the component runs on. Used by the
 # column-mapping sync action to read an input table's columns at config time (when no
@@ -50,6 +53,9 @@ def apply_column_mapping(row: dict, id_column: str, mapping: list[ColumnMapping]
     - The `id_column` is always preserved under its original source name so that
       `build_winstrom_record` can extract it regardless of the mapping.
     - If a mapping entry's source column is not in the row, it is silently skipped.
+    - If a mapping entry has an empty destination (an input column the user left
+      unmapped in loadColumnMapping), it is skipped — otherwise it would create a
+      blank-named field in the winstrom payload.
     - If the id_column appears in the mapping list, the rename is ignored — the column
       stays under its original source name (the id is handled separately).
     """
@@ -65,6 +71,8 @@ def apply_column_mapping(row: dict, id_column: str, mapping: list[ColumnMapping]
     for cm in mapping:
         if cm.source == id_column:
             continue  # id_column is handled above — do not rename it
+        if not cm.destination:
+            continue  # unmapped input column — skip rather than emit a blank field
         if cm.source in row:
             result[cm.destination] = row[cm.source]
 
@@ -115,18 +123,19 @@ def build_winstrom_record(row: dict, id_column: str, id_type: str) -> dict:
 class Component(ComponentBase):
     def __init__(self):
         super().__init__()
-
-    def _build_client(self, cfg: Configuration) -> FlexiBeeWriterClient:
-        return FlexiBeeWriterClient(
-            base_url=cfg.base_url,
-            company=cfg.company,
-            username=cfg.username,
-            password=cfg.password,
-            ssl_verify=cfg.ssl_verify,
+        # Single construction path: parse the config and build the client once, so
+        # run() and every sync action share the same instances instead of re-parsing.
+        self.cfg = Configuration(**self.configuration.parameters)
+        self.client = FlexiBeeWriterClient(
+            base_url=self.cfg.base_url,
+            company=self.cfg.company,
+            username=self.cfg.username,
+            password=self.cfg.password,
+            ssl_verify=self.cfg.ssl_verify,
         )
 
     def run(self):
-        cfg = Configuration(**self.configuration.parameters)
+        cfg = self.cfg
         if not cfg.evidence:
             raise UserException("No evidence type selected. Choose an evidence type for this row.")
         if not cfg.id_column:
@@ -139,38 +148,51 @@ class Component(ComponentBase):
             raise UserException("No input table found. Map exactly one input table to this row.")
         input_table = input_tables[0]
 
-        client = self._build_client(cfg)
-
-        failed_records: list[dict] = []
         total_created = total_updated = total_failed = 0
 
+        error_table = self.create_out_table_definition(
+            "write_errors.csv",
+            primary_key=[],
+            incremental=False,
+            write_always=True,
+            has_header=True,
+        )
         with open(input_table.full_path, encoding="utf-8", newline="") as in_file:
             reader = csv.DictReader(in_file)
             if reader.fieldnames is None or cfg.id_column not in reader.fieldnames:
+                # Validate before producing any output so an invalid input aborts cleanly.
                 raise UserException(
                     f"Input table has no column '{cfg.id_column}'. Available columns: {reader.fieldnames}"
                 )
-            for batch in chunked(reader, cfg.batch_size):
-                mapped = [apply_column_mapping(row, cfg.id_column, cfg.column_mapping) for row in batch]
-                records = [build_winstrom_record(row, cfg.id_column, cfg.id_type) for row in mapped]
-                try:
-                    result = client.write_records(cfg.evidence, records)
-                except FlexiBeeClientError as exc:
-                    raise UserException(str(exc))
-                total_created += result.created
-                total_updated += result.updated
-                total_failed += result.failed
-                failed_records.extend(result.failed_records)
-                if cfg.fail_on_error and result.failed_records:
-                    first = result.failed_records[0]
-                    raise UserException(
-                        f"Write failed for record id='{first['id']}': {first['error']} "
-                        f"(field={first['field']}, code={first['code']}). "
-                        f"{len(failed_records)} record(s) failed before aborting."
-                    )
+            # Stream failures to disk per batch instead of holding them all in memory.
+            with open(error_table.full_path, "w", encoding="utf-8", newline="") as err_file:
+                error_writer = csv.DictWriter(err_file, fieldnames=_ERROR_COLUMNS, extrasaction="ignore")
+                error_writer.writeheader()
+                for batch in chunked(reader, cfg.batch_size):
+                    mapped = [apply_column_mapping(row, cfg.id_column, cfg.column_mapping) for row in batch]
+                    records = [build_winstrom_record(row, cfg.id_column, cfg.id_type) for row in mapped]
+                    try:
+                        result = self.client.write_records(cfg.evidence, records)
+                    except FlexiBeeClientError as exc:
+                        raise UserException(str(exc))
+                    total_created += result.created
+                    total_updated += result.updated
+                    total_failed += result.failed
+                    for failure in result.failed_records:
+                        error_writer.writerow(asdict(failure))
+                    if cfg.fail_on_error and result.failed_records:
+                        first = result.failed_records[0]
+                        # Abort without emitting a partial output table.
+                        err_file.close()
+                        os.remove(error_table.full_path)
+                        raise UserException(
+                            f"Write failed for record id='{first.id}': {first.error} "
+                            f"(field={first.field}, code={first.code}). "
+                            f"{total_failed} record(s) failed before aborting."
+                        )
 
-        self._write_error_table(failed_records)
-        logging.info(
+        self.write_manifest(error_table)
+        LOGGER.info(
             "ABRA Flexi write complete for evidence '%s': created=%d, updated=%d, failed=%d",
             cfg.evidence,
             total_created,
@@ -178,43 +200,23 @@ class Component(ComponentBase):
             total_failed,
         )
         if total_failed:
-            logging.warning("%d record(s) failed; see the write_errors table.", total_failed)
-
-    def _write_error_table(self, failed_records: list[dict]) -> None:
-        """Write failed records to the write_errors table (always, even on 0 failures)."""
-        table = self.create_out_table_definition(
-            "write_errors.csv",
-            primary_key=[],
-            incremental=False,
-            write_always=True,
-            has_header=True,
-        )
-        with open(table.full_path, "w", encoding="utf-8", newline="") as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=_ERROR_COLUMNS, extrasaction="ignore")
-            writer.writeheader()
-            for record in failed_records:
-                writer.writerow(record)
-        self.write_manifest(table)
+            LOGGER.warning("%d record(s) failed; see the write_errors table.", total_failed)
 
     @sync_action("testConnection")
     def test_connection(self) -> ValidationResult:
-        cfg = Configuration(**self.configuration.parameters)
-        client = self._build_client(cfg)
         try:
-            client.test_connection()
+            self.client.test_connection()
         except FlexiBeeClientError as exc:
             raise UserException(str(exc))
         return ValidationResult("Connection successful.")
 
     @sync_action("listEvidences")
     def list_evidences(self) -> list[SelectElement]:
-        cfg = Configuration(**self.configuration.parameters)
-        client = self._build_client(cfg)
         try:
-            evidences = client.list_evidences()
-        except Exception as exc:  # noqa: BLE001
+            evidences = self.client.list_evidences()
+        except FlexiBeeClientError as exc:
             raise UserException(f"Could not list evidences: {exc}")
-        return [SelectElement(value=path, label=f"{name} ({path})") for path, name in evidences]
+        return [SelectElement(value=e.path, label=f"{e.name} ({e.path})") for e in evidences]
 
     def _get_input_table_columns(self, table_id: str) -> list[str]:
         """Read a Storage table's column names via the Storage API.
@@ -227,15 +229,14 @@ class Component(ComponentBase):
         try:
             response = requests.get(url, headers=headers, timeout=15)
             response.raise_for_status()
-        except requests.RequestException as exc:
+            return response.json().get("columns", [])
+        except (requests.RequestException, ValueError) as exc:
             raise UserException(f"Could not read columns of input table '{table_id}' from Keboola Storage: {exc}")
-        return response.json().get("columns", [])
 
     def _flexibee_fields_metadata(self, cfg: Configuration) -> list[dict]:
         """FlexiBee writable fields for `cfg.evidence`, shaped for the destination dropdown."""
-        client = self._build_client(cfg)
         try:
-            fields = client.list_evidence_fields(cfg.evidence)
+            fields = self.client.list_evidence_fields(cfg.evidence)
         except FlexiBeeClientError as exc:
             raise UserException(str(exc))
         return [
@@ -253,7 +254,7 @@ class Component(ComponentBase):
         identical). Both lists are stored in `_metadata_` so the source/destination
         dropdowns can render.
         """
-        cfg = Configuration(**self.configuration.parameters)
+        cfg = self.cfg
         if not cfg.evidence:
             raise UserException("Select an evidence type before loading the column mapping.")
         input_mappings = self.configuration.tables_input_mapping
