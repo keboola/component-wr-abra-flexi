@@ -1,0 +1,20 @@
+{
+  "action": "run",
+  "parameters": {
+    "base_url": "https://demo.flexibee.eu",
+    "company": "demo",
+    "username": "winstrom",
+    "#password": "winstrom",
+    "ssl_verify": true,
+    "evidence": "adresar",
+    "id_column": "nonexistent_column",
+    "id_type": "ext"
+  },
+  "storage": {
+    "input": {
+      "tables": [
+        {"source": "in.c-test.adresar", "destination": "adresar.csv"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,2 @@
+id,error,field,code
+ext:KBC_VCR_BAD,Zadaný text 'code:INVALID_ZZ_9999' musí identifikovat objekt [ext:KBC_VCR_BAD],stat,notObjectIdentifier

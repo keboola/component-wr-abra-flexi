@@ -1,1 +1,133 @@
-{}
+{
+  "type": "object",
+  "title": "Evidence write configuration",
+  "required": ["evidence", "id_column"],
+  "properties": {
+    "evidence": {
+      "type": "string",
+      "title": "Evidence type",
+      "description": "Evidence to write to",
+      "format": "select",
+      "options": {
+        "tooltip": "ABRA Flexi evidence path (e.g. adresar). Use the button to load the available types for this company.",
+        "async": {
+          "label": "Re-load evidence types",
+          "action": "listEvidences",
+          "autoload": ["parameters.base_url", "parameters.company", "parameters.username"]
+        }
+      },
+      "propertyOrder": 1
+    },
+    "id_column": {
+      "type": "string",
+      "title": "ID column",
+      "description": "Record identifier column",
+      "options": {
+        "tooltip": "Input column whose value identifies the record; it becomes the FlexiBee record id."
+      },
+      "propertyOrder": 2
+    },
+    "id_type": {
+      "type": "string",
+      "title": "ID type",
+      "description": "How the ID is matched",
+      "enum": ["ext", "internal"],
+      "options": {
+        "enum_titles": ["External ID (ext)", "Internal FlexiBee ID (internal)"],
+        "tooltip": "ext = upsert by external ID; internal = update by FlexiBee numeric ID."
+      },
+      "default": "ext",
+      "propertyOrder": 3
+    },
+    "batch_size": {
+      "type": "integer",
+      "title": "Batch size",
+      "options": {
+        "tooltip": "Records sent per request (1–500)."
+      },
+      "default": 100,
+      "minimum": 1,
+      "maximum": 500,
+      "propertyOrder": 4
+    },
+    "fail_on_error": {
+      "type": "boolean",
+      "title": "Fail on error",
+      "description": "Stop on first error",
+      "options": {
+        "tooltip": "Abort the job on the first record error instead of routing failures to the write_errors table."
+      },
+      "default": false,
+      "propertyOrder": 5
+    },
+    "load_mapping": {
+      "type": "button",
+      "format": "sync-action",
+      "title": "Load columns & FlexiBee fields",
+      "description": "Add unmapped columns; load fields",
+      "options": {
+        "tooltip": "Appends a row for each input column not yet mapped and loads the evidence's FlexiBee fields as destination options. Existing rows are preserved.",
+        "async": {
+          "label": "Load columns & FlexiBee fields",
+          "action": "loadColumnMapping"
+        }
+      },
+      "propertyOrder": 9
+    },
+    "column_mapping": {
+      "type": "array",
+      "title": "Column Mapping",
+      "description": "Map input columns to FlexiBee fields",
+      "format": "table",
+      "options": {
+        "tooltip": "Only mapped columns are sent; unmapped columns are dropped. Leave empty to send all columns as-is."
+      },
+      "items": {
+        "type": "object",
+        "required": ["source", "destination"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source Column",
+            "description": "Input column",
+            "watch": {"columns": "_metadata_.table.columns"},
+            "enumSource": "columns",
+            "options": {"tags": true},
+            "propertyOrder": 1
+          },
+          "destination": {
+            "type": "string",
+            "title": "FlexiBee Field",
+            "description": "Target field",
+            "format": "select",
+            "watch": {"fields": "_metadata_.flexibee_fields"},
+            "enumSource": [
+              {
+                "source": "fields",
+                "value": "{{item.field_name}}",
+                "title": "{{item.label}}"
+              }
+            ],
+            "options": {"tags": true},
+            "propertyOrder": 2
+          }
+        }
+      },
+      "propertyOrder": 8
+    },
+    "_metadata_": {
+      "type": "object",
+      "options": {"hidden": true},
+      "properties": {
+        "table": {
+          "type": "object",
+          "properties": {
+            "columns": {"type": "array"}
+          }
+        },
+        "flexibee_fields": {"type": "array"}
+      },
+      "propertyOrder": 9
+    }
+  }
+}

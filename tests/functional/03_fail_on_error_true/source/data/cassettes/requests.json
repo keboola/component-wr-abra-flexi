@@ -1,0 +1,7 @@
+{
+  "_metadata": {"freeze_time": "2026-06-03T11:24:28", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-06-03T09:24:29.882039+00:00"},
+  "interactions": [
+    {"request": {"body": "{\"winstrom\": {\"adresar\": [{\"nazev\": \"VCR Test Company Alpha\", \"stat\": \"code:CZ\", \"id\": \"ext:KBC_VCR_001\"}, {\"nazev\": \"VCR Bad Record - invalid country\", \"stat\": \"code:INVALID_ZZ_9999\", \"id\": \"ext:KBC_VCR_BAD\"}]}}", "headers": {"Accept": ["*/*"], "Content-Length": ["212"], "Content-Type": ["application/json"]}, "method": "POST", "uri": "https://keboola.flexibee.eu/c/fiktivni_firma/adresar.json"}, "response": {"body": {"string": "{\"winstrom\": {\"@version\": \"1.0\", \"success\": \"false\", \"stats\": {\"created\": \"0\", \"updated\": \"0\", \"deleted\": \"0\", \"skipped\": \"0\", \"failed\": \"1\"}, \"results\": [{\"request-id\": \"ext:KBC_VCR_BAD\", \"errors\": [{\"message\": \"Zadan\\u00fd text 'code:INVALID_ZZ_9999' mus\\u00ed identifikovat objekt [ext:KBC_VCR_BAD]\", \"for\": \"stat\", \"path\": \"adresar[id=ext:KBC_VCR_BAD].stat\", \"value\": \"code:INVALID_ZZ_9999\", \"code\": \"REDACTED\", \"messageCode\": \"notObjectIdentifier\"}]}]}}"}, "headers": {"Content-Length": ["415"], "Content-Type": ["application/json"]}, "status": {"code": 400, "message": "Bad Request"}}}
+  ],
+  "version": 1
+}

@@ -1,0 +1,12 @@
+{
+  "exit_code": null,
+  "stderr": "",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "ABRA Flexi write complete for evidence 'adresar': created=0, updated=2, failed=0",
+      "timestamp": "2026-06-03T11:24:28.000Z"
+    }
+  ]
+}

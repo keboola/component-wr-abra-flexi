@@ -1,0 +1,18 @@
+{
+  "exit_code": null,
+  "stderr": "1 record(s) failed; see the write_errors table.\n",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "ABRA Flexi write complete for evidence 'adresar': created=0, updated=0, failed=1",
+      "timestamp": "2026-06-03T11:24:28.000Z"
+    },
+    {
+      "level": "WARNING",
+      "logger": "root",
+      "message": "1 record(s) failed; see the write_errors table.",
+      "timestamp": "2026-06-03T11:24:28.000Z"
+    }
+  ]
+}
